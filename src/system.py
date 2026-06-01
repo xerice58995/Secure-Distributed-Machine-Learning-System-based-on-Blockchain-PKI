@@ -4,17 +4,21 @@
 """
 
 import time
-import numpy as np
 from typing import Dict, List, Optional, Tuple
+
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
 from src.blockchain.blockchain import LightweightBlockchain
-from src.security.crypto import SignatureManager, CryptographicManager
-from src.ml.model import SimpleMLP, LocalTrainer, FederatedAveraging, DataPartitioner
+from src.ml.model import DataPartitioner, FederatedAveraging, LocalTrainer, SimpleMLP
 from src.network.communication import (
-    LocalCommunicationBus, MasterNode, WorkerNode, MessagePayload
+    LocalCommunicationBus,
+    MasterNode,
+    MessagePayload,
+    WorkerNode,
 )
+from src.security.crypto import CryptographicManager, SignatureManager
 
 
 class SecureDMLSystem:
@@ -23,9 +27,9 @@ class SecureDMLSystem:
     整合區塊鏈PKI、密碼簽名驗證和聯邦學習框架
     """
 
-    def __init__(self, num_workers: int = 3,
-                 crypto_type: str = "rsa",
-                 device: str = "cpu"):
+    def __init__(
+        self, num_workers: int = 3, crypto_type: str = "rsa", device: str = "cuda"
+    ):
         """
         初始化安全DML系統
 
@@ -47,7 +51,9 @@ class SecureDMLSystem:
         self.comm_bus = LocalCommunicationBus()
         self.master_node = MasterNode("master", self.comm_bus)
         self.worker_nodes: Dict[str, WorkerNode] = {}
-        self.worker_keys: Dict[str, Tuple[str, str]] = {}  # worker_id -> (private_key, public_key)
+        self.worker_keys: Dict[
+            str, Tuple[str, str]
+        ] = {}  # worker_id -> (private_key, public_key)
 
         # 註冊主節點
         self.comm_bus.register_node(self.master_node)
@@ -60,7 +66,7 @@ class SecureDMLSystem:
         self.training_history: Dict[str, List] = {
             "loss": [],
             "accuracy": [],
-            "round": []
+            "round": [],
         }
 
         # 效能指標
@@ -68,7 +74,7 @@ class SecureDMLSystem:
             "signature_generation_time": [],
             "signature_verification_time": [],
             "aggregation_time": [],
-            "total_round_time": []
+            "total_round_time": [],
         }
 
     def setup_workers(self):
@@ -112,11 +118,11 @@ class SecureDMLSystem:
         model_weights = self.global_model.get_weights_dict()
 
         # 轉換為列表格式以便傳輸
-        weights_for_transmission = {
-            k: v.tolist() for k, v in model_weights.items()
-        }
+        weights_for_transmission = {k: v.tolist() for k, v in model_weights.items()}
 
-        distribution_status = self.master_node.distribute_model(weights_for_transmission)
+        distribution_status = self.master_node.distribute_model(
+            weights_for_transmission
+        )
 
         successful = sum(1 for status in distribution_status.values() if status)
         print(f"模型分發完成：{successful}/{self.num_workers}個節點")
@@ -184,7 +190,9 @@ class SecureDMLSystem:
                 model_weights, model_hash, signature, public_key
             )
             verification_time = time.time() - start_time
-            self.performance_metrics["signature_verification_time"].append(verification_time)
+            self.performance_metrics["signature_verification_time"].append(
+                verification_time
+            )
 
             # 記錄驗證結果
             self.master_node.record_verification_result(
@@ -246,8 +254,9 @@ class SecureDMLSystem:
 
         return True
 
-    def simulate_malicious_worker(self, worker_id: str,
-                                  train_loader: DataLoader) -> Dict:
+    def simulate_malicious_worker(
+        self, worker_id: str, train_loader: DataLoader
+    ) -> Dict:
         """
         模擬惡意工作節點的行為
         嘗試提交被篡改的模型
@@ -298,7 +307,7 @@ class SecureDMLSystem:
             "model_hash": correct_hash,  # 簽署的是正確的雜湊
             "signature": signature,
             "sender_id": worker_id,
-            "is_malicious": True
+            "is_malicious": True,
         }
 
     def training_loop(self, num_rounds: int = 5):
@@ -308,9 +317,9 @@ class SecureDMLSystem:
         Args:
             num_rounds: 訓練輪數
         """
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("啟動安全分布式機器學習系統")
-        print("="*60)
+        print("=" * 60)
 
         # 準備MNIST數據集（模擬）
         print("\n正在準備訓練數據...")
@@ -318,9 +327,9 @@ class SecureDMLSystem:
         print("  使用模擬數據集進行演示")
 
         for round_num in range(num_rounds):
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print(f"訓練輪次 {round_num + 1}/{num_rounds}")
-            print(f"{'='*60}")
+            print(f"{'=' * 60}")
 
             round_start = time.time()
 
@@ -359,14 +368,16 @@ class SecureDMLSystem:
                     model_weights, model_hash, signature, public_key
                 )
                 verify_time = time.time() - start_time
-                self.performance_metrics["signature_verification_time"].append(verify_time)
+                self.performance_metrics["signature_verification_time"].append(
+                    verify_time
+                )
 
                 # 創建更新消息
                 update = {
                     "model_weights": model_weights,
                     "model_hash": model_hash,
                     "signature": signature,
-                    "sender_id": worker_id
+                    "sender_id": worker_id,
                 }
 
                 # 將消息添加到主節點隊列
@@ -376,15 +387,19 @@ class SecureDMLSystem:
                     receiver_id="master",
                     timestamp=time.time(),
                     data={
-                        "model_weights": {k: v.tolist() if hasattr(v, 'tolist') else v
-                                        for k, v in model_weights.items()},
+                        "model_weights": {
+                            k: v.tolist() if hasattr(v, "tolist") else v
+                            for k, v in model_weights.items()
+                        },
                         "model_hash": model_hash,
-                        "signature": signature
-                    }
+                        "signature": signature,
+                    },
                 )
                 self.master_node.message_queue.append(message_obj)
 
-                print(f"  {worker_id}: 簽名驗證={is_valid} (簽名生成耗時{sig_time*1000:.2f}ms，驗證耗時{verify_time*1000:.2f}ms)")
+                print(
+                    f"  {worker_id}: 簽名驗證={is_valid} (簽名生成耗時{sig_time * 1000:.2f}ms，驗證耗時{verify_time * 1000:.2f}ms)"
+                )
 
             # 步驟4: 收集和驗證模型
             verified_updates = self.collect_and_verify_updates()
@@ -409,9 +424,9 @@ class SecureDMLSystem:
         """
         演示系統對惡意節點的檢測能力
         """
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("演示：惡意節點檢測")
-        print("="*60)
+        print("=" * 60)
 
         print("\n場景：惡意工作節點試圖提交被篡改的模型")
 
@@ -435,7 +450,7 @@ class SecureDMLSystem:
             malicious_update["model_weights"],
             malicious_update["model_hash"],
             malicious_update["signature"],
-            public_key
+            public_key,
         )
 
         print(f"\n驗證結果:")
@@ -450,16 +465,16 @@ class SecureDMLSystem:
         self.blockchain.add_model_update_record(
             worker_id,
             malicious_update["model_hash"],
-            {"verified": False, "reason": message, "attack_type": "model_poisoning"}
+            {"verified": False, "reason": message, "attack_type": "model_poisoning"},
         )
 
     def generate_report(self):
         """
         生成系統性能和安全性報告
         """
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("系統效能和安全性報告")
-        print("="*60)
+        print("=" * 60)
 
         # 驗證報告
         verification_report = self.master_node.get_verification_report()
@@ -472,11 +487,15 @@ class SecureDMLSystem:
         # 效能指標
         print("\n效能指標:")
         if self.performance_metrics["signature_generation_time"]:
-            avg_sig_gen = np.mean(self.performance_metrics["signature_generation_time"]) * 1000
+            avg_sig_gen = (
+                np.mean(self.performance_metrics["signature_generation_time"]) * 1000
+            )
             print(f"  平均簽名生成時間: {avg_sig_gen:.2f}ms")
 
         if self.performance_metrics["signature_verification_time"]:
-            avg_sig_verify = np.mean(self.performance_metrics["signature_verification_time"]) * 1000
+            avg_sig_verify = (
+                np.mean(self.performance_metrics["signature_verification_time"]) * 1000
+            )
             print(f"  平均簽名驗證時間: {avg_sig_verify:.2f}ms")
 
         if self.performance_metrics["aggregation_time"]:

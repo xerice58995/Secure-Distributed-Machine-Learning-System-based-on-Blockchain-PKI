@@ -5,27 +5,28 @@
 
 import hashlib
 import json
-import time
-from typing import List, Dict, Optional
-from dataclasses import dataclass, asdict
 import threading
+import time
+from dataclasses import asdict, dataclass
+from typing import Dict, List, Optional
 
 
 @dataclass
 class BlockData:
     """區塊鏈中存儲的輕量級元數據"""
-    worker_id: str                  # 工作節點編號
-    public_key: str                 # 工作節點的公鑰（PEM格式）
-    model_hash: str                 # 模型權重的SHA-256雜湊值
-    timestamp: float                # 時間戳
-    signature_metadata: Dict        # 簽名元數據
-    previous_hash: str              # 前一區塊的雜湊值
+
+    worker_id: str  # 工作節點編號
+    public_key: str  # 工作節點的公鑰（PEM格式）
+    model_hash: str  # 模型權重的SHA-256雜湊值
+    timestamp: float  # 時間戳
+    signature_metadata: Dict  # 簽名元數據
+    previous_hash: str  # 前一區塊的雜湊值
 
 
 class Block:
     """
     區塊鏈中的單個區塊
-    每個區塊包含輕量級元數據而不是完整的模型權重
+    每個區塊包含驗證用數據而不是完整的模型權重，避免拖累效能
     """
 
     def __init__(self, data: BlockData, previous_hash: str = "0"):
@@ -55,7 +56,7 @@ class Block:
             "model_hash": self.data.model_hash,
             "timestamp": self.timestamp,
             "previous_hash": self.previous_hash,
-            "nonce": self.nonce
+            "nonce": self.nonce,
         }
         block_string = json.dumps(block_content, sort_keys=True)
         return hashlib.sha256(block_string.encode()).hexdigest()
@@ -66,7 +67,7 @@ class Block:
             "data": asdict(self.data),
             "previous_hash": self.previous_hash,
             "timestamp": self.timestamp,
-            "hash": self.hash
+            "hash": self.hash,
         }
 
 
@@ -84,7 +85,7 @@ class LightweightBlockchain:
         self.lock = threading.RLock()  # 線程安全鎖
 
     def add_genesis_block(self):
-        """創建並添加創世區塊"""
+        """創建初始區塊"""
         with self.lock:
             if len(self.chain) == 0:
                 genesis_data = BlockData(
@@ -93,7 +94,7 @@ class LightweightBlockchain:
                     model_hash="",
                     timestamp=time.time(),
                     signature_metadata={},
-                    previous_hash="0"
+                    previous_hash="0",
                 )
                 genesis_block = Block(genesis_data, "0")
                 self.chain.append(genesis_block)
@@ -124,11 +125,10 @@ class LightweightBlockchain:
                 model_hash="REGISTRATION",
                 timestamp=time.time(),
                 signature_metadata={"type": "registration"},
-                previous_hash=self.chain[-1].hash if self.chain else "0"
+                previous_hash=self.chain[-1].hash if self.chain else "0",
             )
 
-            block = Block(registration_data,
-                         self.chain[-1].hash if self.chain else "0")
+            block = Block(registration_data, self.chain[-1].hash if self.chain else "0")
             self.chain.append(block)
             return True
 
@@ -146,8 +146,9 @@ class LightweightBlockchain:
         with self.lock:
             return self.worker_public_keys.get(worker_id)
 
-    def add_model_update_record(self, worker_id: str, model_hash: str,
-                                signature_metadata: Dict) -> bool:
+    def add_model_update_record(
+        self, worker_id: str, model_hash: str, signature_metadata: Dict
+    ) -> bool:
         """
         添加模型更新記錄到區塊鏈
         這創建審計日誌，記錄每個工作節點的模型提交情況
@@ -174,7 +175,7 @@ class LightweightBlockchain:
                 model_hash=model_hash,
                 timestamp=time.time(),
                 signature_metadata=signature_metadata,
-                previous_hash=self.chain[-1].hash
+                previous_hash=self.chain[-1].hash,
             )
 
             block = Block(update_data, self.chain[-1].hash)

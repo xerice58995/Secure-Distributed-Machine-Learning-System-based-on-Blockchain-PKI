@@ -3,13 +3,14 @@
 實現輕量級的神經網絡模型和聯邦學習相關功能
 """
 
+import copy
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, TensorDataset, Subset
-import numpy as np
-from typing import Dict, List, Tuple, Optional
-import copy
+from torch.utils.data import DataLoader, Subset, TensorDataset
 
 
 class SimpleMLP(nn.Module):
@@ -18,8 +19,9 @@ class SimpleMLP(nn.Module):
     用於MNIST手寫數字識別任務
     """
 
-    def __init__(self, input_size: int = 784, hidden_size: int = 128,
-                 num_classes: int = 10):
+    def __init__(
+        self, input_size: int = 784, hidden_size: int = 128, num_classes: int = 10
+    ):
         """
         初始化MLP網絡
 
@@ -88,7 +90,7 @@ class LocalTrainer:
     每個工作節點使用此類進行本地模型訓練
     """
 
-    def __init__(self, model: nn.Module, device: str = "cpu"):
+    def __init__(self, model: nn.Module, device: str = "cuda"):
         """
         初始化訓練器
 
@@ -101,8 +103,9 @@ class LocalTrainer:
         # 交叉熵損失函數（用於多分類任務）
         self.criterion = nn.CrossEntropyLoss()
 
-    def train_epoch(self, train_loader: DataLoader,
-                   learning_rate: float = 0.01) -> float:
+    def train_epoch(
+        self, train_loader: DataLoader, learning_rate: float = 0.01
+    ) -> float:
         """
         訓練一個epoch（一輪完整的訓練數據）
 
@@ -193,7 +196,9 @@ class FederatedAveraging:
     """
 
     @staticmethod
-    def aggregate_models(model_list: List[Dict[str, np.ndarray]]) -> Dict[str, np.ndarray]:
+    def aggregate_models(
+        model_list: List[Dict[str, np.ndarray]],
+    ) -> Dict[str, np.ndarray]:
         """
         聚合多個模型的權重
         計算所有驗證通過的模型的平均值
@@ -229,9 +234,9 @@ class FederatedAveraging:
         return aggregated
 
     @staticmethod
-    def weighted_aggregate_models(model_list: List[Dict[str, np.ndarray]],
-                                  weights: Optional[List[float]] = None
-                                  ) -> Dict[str, np.ndarray]:
+    def weighted_aggregate_models(
+        model_list: List[Dict[str, np.ndarray]], weights: Optional[List[float]] = None
+    ) -> Dict[str, np.ndarray]:
         """
         帶權重的模型聚合
         根據權重對不同工作節點的模型進行加權平均
@@ -276,8 +281,9 @@ class DataPartitioner:
     """
 
     @staticmethod
-    def non_iid_partition(dataset, num_partitions: int,
-                         concentration: float = 0.5) -> List[Subset]:
+    def non_iid_partition(
+        dataset, num_partitions: int, concentration: float = 0.5
+    ) -> List[Subset]:
         """
         將數據集進行Non-IID分割
         每個工作節點只包含特定類別的數據，模擬實際分布不均勻的場景
@@ -343,7 +349,9 @@ class DataPartitioner:
         partitions = []
         for i in range(num_partitions):
             start = i * samples_per_partition
-            end = start + samples_per_partition if i < num_partitions - 1 else num_samples
+            end = (
+                start + samples_per_partition if i < num_partitions - 1 else num_samples
+            )
             partition_indices = indices[start:end]
             partitions.append(Subset(dataset, partition_indices))
 
