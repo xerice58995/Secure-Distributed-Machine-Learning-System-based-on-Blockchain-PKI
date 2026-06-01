@@ -1,203 +1,231 @@
-# 安全分布式機器學習系統（基於區塊鏈PKI）
+# Secure Distributed Machine Learning System based on Blockchain PKI
 
-> **課程:** 高等作業系統 (CSIE7010)  
-> **作者:** CHING-YU HU (R14945033)
+## System Overview
 
-## 系統概述
+This project delivers a lightweight, highly secure **distributed machine learning (DML) framework** seamlessly integrated with a **blockchain-based Public Key Infrastructure (PKI)**.
 
-本項目實現了一套輕量級且安全的**分布式機器學習(DML)框架**，集成了**區塊鏈式公鑰基礎設施(PKI)機制**。
+### Key Innovations
 
-### 核心創新
+While conventional blockchain applications rely on computationally heavy Proof-of-Work (PoW) consensus algorithms, this framework reimagines the role of blockchain as a:
 
-不同於傳統使用計算成本高昂的工作量證明(PoW)共識算法的區塊鏈應用，本項目創新地將區塊鏈重新定位為：
+* **Decentralized Public Key Infrastructure (PKI)** – Managing worker node public keys without centralized authorities.
+* **Immutable Audit Trail** – Permanently logging all historical model updates.
+* **Trust Verification Architecture** – Safeguarding the integrity and security of the distributed network.
 
-- **分散式公鑰基礎設施(PKI)** - 管理工作節點的公鑰
-- **不可篡改的審計日誌** - 記錄所有模型更新
-- **信任驗證基礎設施** - 確保分布式系統的安全性
+By storing only lightweight metadata (such as worker IDs, public keys, cryptographic model hashes, and timestamps) rather than massive, raw model weights, the blockchain drastically minimizes system overhead.
 
-區塊鏈僅存儲輕量級元數據（工作節點ID、公鑰、模型雜湊、時間戳），而非完整的模型權重，大幅降低系統開銷。
+---
 
-# 快速開始
+# Quick Start
 
-### 1. 環境設置
+### 1. Environment Setup
 
 ```bash
-# 安裝依賴
+# Install required dependencies
 pip install torch torchvision numpy cryptography
 
-# 或使用requirements.txt
+# Alternatively, use the requirements file
 pip install -r requirements.txt
+
 ```
 
-### 2. 運行演示
+### 2. Running the Demo
 
 ```bash
-# 進入項目目錄
+# Navigate to the project directory
 cd Distributed_Maching_Learning
 
-# 運行完整演示
+# Execute the complete pipeline demo
 python main.py
+
 ```
 
-### 3. 運行測試
+### 3. Executing Tests
 
 ```bash
-# 測試區塊鏈功能
+# Run unit tests for blockchain functionality
 python -m pytest tests/test_blockchain.py -v
 
-# 測試密碼學功能
+# Run unit tests for cryptographic modules
 python -m pytest tests/test_crypto.py -v
-```
-
-## 📋 核心概念
-
-### 系統安全機制
-
-1. **數位簽名** - RSA/ECDSA簽署模型
-   - 工作節點使用私鑰簽署
-   - 主節點使用公鑰驗證
-   - 防止身份欺騙
-
-2. **完整性檢查** - SHA-256雜湊驗證
-   - 檢測模型是否被篡改
-   - 任何權重修改都會導致驗證失敗
-
-3. **不可篡改審計** - 區塊鏈記錄
-   - 記錄所有模型更新
-   - 支持事後審計和追蹤
-
-### 執行流程
 
 ```
-工作節點生成密鑰對
-      ↓
-向區塊鏈註冊公鑰
-      ↓
-接收主節點的全局模型
-      ↓
-本地訓練模型
-      ↓
-計算模型雜湊
-      ↓
-使用私鑰簽署雜湊
-      ↓
-提交給主節點
-      ↓
-主節點驗證簽名和完整性
-      ↓
-只聚合驗證通過的模型
-      ↓
-記錄到區塊鏈
+
+---
+
+##  Core Concepts
+
+### System Security Mechanisms
+
+1. **Digital Signatures** – RSA/ECDSA-signed models
+* Worker nodes use their private keys to sign updates.
+* The master node verifies authenticity via the corresponding public key.
+* Mitigates identity spoofing and impersonation attacks.
+
+
+2. **Integrity Verification** – SHA-256 hash checks
+* Detects whether model parameters have been altered during transmission.
+* Any unauthorized weight modification triggers an immediate verification failure.
+
+
+3. **Tamper-Resistant Auditing** – Blockchain ledger
+* Records every model update permanently.
+* Facilitates post-hoc auditing, forensics, and end-to-end traceability.
+
+
+
+### Execution Workflow
+
+```
+Worker node generates a key pair
+          ↓
+Registers public key to the blockchain
+          ↓
+Receives the global model from the master node
+          ↓
+Trains the model locally
+          ↓
+Computes the cryptographic model hash
+          ↓
+Signs the hash using its private key
+          ↓
+Submits the payload to the master node
+          ↓
+Master node validates signature and integrity
+          ↓
+Aggregates only verified models
+          ↓
+Logs the transaction to the blockchain
+
 ```
 
-## 💻 代碼示例
+---
 
-### 示例1：基本設置
+##  Code Examples
+
+### Example 1: Basic Setup
 
 ```python
 from src.system import SecureDMLSystem
 
-# 創建系統（3個工作節點）
+# Initialize system with 3 worker nodes using RSA
 system = SecureDMLSystem(num_workers=3, crypto_type="rsa")
 
-# 設置工作節點
+# Set up worker nodes
 system.setup_workers()
 
-# 執行訓練
+# Execute training loop for 5 rounds
 system.training_loop(num_rounds=5)
 
-# 生成報告
+# Generate evaluation report
 system.generate_report()
+
 ```
 
-### 示例2：密鑰管理
+### Example 2: Cryptographic Key Management
 
 ```python
 from src.security.crypto import SignatureManager
 
-# 創建簽名管理器
+# Initialize signature manager
 manager = SignatureManager(key_type="rsa")
 
-# 生成密鑰對
+# Generate a fresh key pair
 private_key, public_key = manager.generate_keys()
 
-# 簽署和驗證
+# Sign and verify the model
 model_hash, signature = manager.sign_model(model_weights, private_key)
 is_valid, msg = manager.verify_model(model_weights, model_hash, signature, public_key)
+
 ```
 
-### 示例3：區塊鏈操作
+### Example 3: Blockchain Operations
 
 ```python
 from src.blockchain.blockchain import LightweightBlockchain
 
-# 創建區塊鏈
+# Initialize the blockchain and add the genesis block
 bc = LightweightBlockchain()
 bc.add_genesis_block()
 
-# 註冊工作節點
+# Register a worker node with its public key
 bc.register_worker("worker_1", public_key)
 
-# 添加模型記錄
+# Append a model update entry to the ledger
 bc.add_model_update_record("worker_1", model_hash, {"verified": True})
 
-# 驗證完整性
+# Verify the integrity of the entire chain
 is_valid = bc.validate_chain()
+
 ```
 
-## 📊 性能指標
+---
 
-系統自動測量和報告：
+##  Performance Metrics
 
-- **簽名生成時間** - RSA/ECDSA簽名耗時 :
-- **簽名驗證時間** - 驗證簽名耗時 :
-- **模型聚合時間** - FedAvg聚合耗時 :
-- **每輪訓練時間** - 完整訓練輪次耗時 :
-- **驗證通過率** - 模型驗證成功比率 :
+The system automatically tracks and benchmarks the following:
 
-## 🔒 安全特性
+* **Signature Generation Time** – Overhead for signing via RSA/ECDSA :
+* **Signature Verification Time** – Latency for checking signatures :
+* **Model Aggregation Time** – Duration of the FedAvg process :
+* **Per-Round Training Time** – Total wall-clock time per epoch/round :
+* **Verification Success Rate** – Ratio of successfully validated models :
 
-✓ **身份驗證** - RSA/ECDSA簽名  
-✓ **完整性保護** - SHA-256雜湊  
-✓ **不可否認性** - 區塊鏈記錄  
-✓ **審計追蹤** - 完整的操作日誌  
-✓ **惡意檢測** - 自動識別模型篡改  
+---
 
-## 場景
+##  Security Profiles
 
-### 醫療數據聯邦學習
-多個醫院協作訓練診斷模型，保護患者隱私
+* **Authentication** – Powered by RSA/ECDSA signatures
 
-### 金融風控聯合建模
-銀行之間共享風控模型，防止模型被毒化
+* **Integrity Protection** – Enforced via SHA-256 hashing
 
-### 邊緣計算協作
-IoT設備協作訓練模型，確保設備真實性
+* **Non-Repudiation** – Guaranteed by blockchain immutable logs
 
-## 📁 文件結構
+* **Audit Trail** – Comprehensive and traceable operational logs
+
+* **Anomaly Detection** – Automated identification of model tampering
+
+---
+
+## Application Scenarios
+
+### Federated Learning for Healthcare
+
+Enables multiple medical institutions to collaboratively train diagnostic models while keeping sensitive patient data completely localized and private.
+
+### Joint Risk Control in Finance
+
+Facilitates collaborative risk assessment modeling across banking networks while preventing malicious model poisoning attacks.
+
+### Edge Computing Collaboration
+
+Empowers distributed IoT devices to collaboratively train global models while ensuring hardware and node authenticity.
+
+---
+
+##  Project Structure
 
 ```
 src/
-├── blockchain/blockchain.py      # 區塊鏈PKI實現
-├── security/crypto.py            # 密碼學與簽名
-├── ml/model.py                   # 神經網絡與聯邦學習
-├── network/communication.py      # 節點通訊
-└── system.py                     # 系統協調器
+├── blockchain/blockchain.py      # Blockchain PKI implementation
+├── security/crypto.py            # Cryptographic utilities & signatures
+├── ml/model.py                   # Neural networks & federated learning algorithms
+├── network/communication.py      # Node communication protocols
+└── system.py                     # Central system orchestrator
 
 tests/
-├── test_blockchain.py            # 區塊鏈測試
-└── test_crypto.py                # 密碼學測試
+├── test_blockchain.py            # Unit tests for blockchain functionality
+└── test_crypto.py                # Unit tests for cryptographic modules
 
-main.py                           # 主程序入口
+main.py                           # Main entry point
+
 ```
 
+---
 
-## 參考文獻
+## References
 
-- Wang, Z., Wang, Q., Yu, G., & Chen, S. (2024). TDML - A Trustworthy Distributed Machine Learning Framework.
-
-- Subasi, Omer et al. "The Landscape of Modern Machine Learning: A Review of Machine, Distributed and Federated Learning." ArXiv abs/2312.03120 (2023).
-
-- McMahan, B., Moore, E., Ramage, D., Hampson, S., & y Arcas, B. A. (2017). Communication-efficient learning of deep networks from decentralized data.
-
-- Nakamoto, S. (2008). Bitcoin: A peer-to-peer electronic cash system.
+* Wang, Z., Wang, Q., Yu, G., & Chen, S. (2024). TDML - A Trustworthy Distributed Machine Learning Framework.
+* Subasi, Omer et al. "The Landscape of Modern Machine Learning: A Review of Machine, Distributed and Federated Learning." ArXiv abs/2312.03120 (2023).
+* McMahan, B., Moore, E., Ramage, D., Hampson, S., & y Arcas, B. A. (2017). Communication-efficient learning of deep networks from decentralized data.
+* Nakamoto, S. (2008). Bitcoin: A peer-to-peer electronic cash system.
